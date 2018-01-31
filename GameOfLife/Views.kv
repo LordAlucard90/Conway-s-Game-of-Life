@@ -1,0 +1,188 @@
+#:import Factory kivy.factory.Factory
+
+#
+#           Base Elements
+#
+
+
+<CtrlButton>:
+    size_hint: (0.25, 1.0)
+
+<CtrlLabel>:
+    size_hint: (0.4, 1.0)
+
+<InputCtrl>:
+    multiline: False
+    on_text: self.ctrl.check_growth_medium_name(self.text)
+
+<CtrlPopup>:
+    auto_dismiss: False
+
+
+#
+#           Main Layouts
+#
+
+
+<GameLayout@GridLayout>:
+    cols: 1
+
+<ControlsBar@GridLayout>:
+    size_hint: (1.0, 0.08)
+    rows: 1
+
+<TutorialLabel@Label>:
+    text: 'Pause / Start: [spacebar] <> Speed Slowest / Faster: [left / right] <> Dim. Inc. / Dec.: [up / down] <> Move: [w a s d]'
+    size_hint: (1.0, None)
+    height: 20
+
+<GrowthMediumSurface@Label>:
+    cells: self.ctrl.gm_state_grid
+    zoom: self.ctrl.zoom
+    pos_x: self.ctrl.pos_x
+    pos_y: self.ctrl.pos_y
+    cell_cols: self.ctrl.gm_cur_cols
+    cell_rows: self.ctrl.gm_cur_rows
+    cell_size_h: round((self.height - (self.cell_rows + 2) - self.hbar_h) / self.cell_rows, 2)
+    cell_size_w: round((self.width - (self.cell_cols + 2) - self.vbar_w) / self.cell_cols, 2)
+    border_w: round((self.width - (self.cell_size_w * self.cell_cols) - (self.cell_cols - 1)) / 2, 2) - self.vbar_w
+    border_h: round((self.height - (self.cell_size_h * self.cell_rows) - (self.cell_rows - 1))  /2, 2) + self.hbar_h
+    hbar_w: (self.width - self.border_w - (2 * self.vbar_w)) * (self.zoom / self.ctrl._max_zoom)
+    vbar_h: (self.height - self.border_h) * (self.zoom / self.ctrl._max_zoom)
+    hbar_pos_w: ((self.width - self.border_w - (2 * self.vbar_w)) * self.pos_x) - (self.hbar_w / 2)
+    vbar_pos_h: ((self.height - self.border_h) * (1 - self.pos_y)) - (self.vbar_h / 2)
+
+
+#
+#           Controls Buttons
+#
+
+
+<Load@CtrlButton>:
+    text: 'Load'
+    on_press: Factory.LoadCtrlPopup(grid_ctrl=self.ctrl).open()
+
+<Save@CtrlButton>:
+    text: 'Save'
+    on_press: Factory.SaveCtrlPopup(keyboard_listener=self.parent.parent, grid_ctrl=self.ctrl).open()
+    disabled: self.ctrl.is_running or not self.ctrl.can_run
+
+<Reset@CtrlButton>:
+    text: 'Reset'
+    on_press: self.ctrl.reset_evolution()
+    disabled: self.ctrl.round == 0 and not self.ctrl.custom_gm
+
+<Clear@CtrlButton>:
+    text: 'Clear'
+    on_press: self.ctrl.clear_evolution()
+    disabled: not self.ctrl.can_run
+
+<SpeedLabel@CtrlLabel>:
+    text: 'Speed  [ {}x ]'.format(self.ctrl.fps)
+
+<SpeedDown@CtrlButton>:
+    text: '<<'
+    on_press: self.ctrl.decrease_fps()
+    disabled: self.ctrl.fps == self.ctrl._min_fps
+
+<Pause@CtrlButton>:
+    text: '='
+    on_press: self.ctrl.pause_evolution()
+    disabled: not self.ctrl.is_running
+
+<Start@CtrlButton>:
+    text: '>'
+    on_press: self.ctrl.start_evolution()
+    disabled: not self.ctrl.can_run or self.ctrl.is_running
+
+<SpeedUp@CtrlButton>:
+    text: '>>'
+    on_press: self.ctrl.increase_fps()
+    disabled: self.ctrl.fps == self.ctrl._max_fps
+
+<ZoomLabel@CtrlLabel>:
+    text: 'Dim.  [ {}x ]'.format(self.ctrl.zoom)
+
+<ZoomOut@CtrlButton>:
+    text: '-'
+    disabled: self.ctrl.zoom == self.ctrl._min_zoom
+    on_press: self.ctrl.increase_zoom()
+
+<ZoomIn@CtrlButton>:
+    text: '+'
+    disabled: self.ctrl.zoom == self.ctrl._max_zoom
+    on_press: self.ctrl.decrease_zoom()
+
+
+#
+#           Save Popup
+#
+
+
+<SaveCtrlPopup>:
+    title: 'Select Name'
+    size_hint: (0.8, None)
+    height: 90
+
+<SaveGridCtrl>:
+    rows: 1
+
+<SavePopupBtn@CtrlButton>:
+    text: 'save'
+    disabled: self.ctrl.path_exists or not self.ctrl.is_path_valid
+    on_press: self.ctrl.save_growth_medium()
+    on_release: self.parent.parent.parent.parent.dismiss()
+
+<CloseSavePopupBtn@CtrlButton>:
+    text: 'cancel'
+    on_press: self.ctrl.clear_path()
+    on_press: self.parent.parent.parent.parent.dismiss()
+
+
+#
+#           Load Popup
+#
+
+
+<LoadCtrlPopup>:
+    title: 'Select Grouth Medium'
+    size_hint: (0.4, 0.8)
+
+<LoadGridCtrl>:
+    cols: 1
+
+<LoadPopupBtn@CtrlButton>:
+    text: 'load'
+    disabled: not self.ctrl.path_exists or not self.ctrl.is_path_valid
+    on_press: self.ctrl.load_growth_medium()
+    on_release: self.parent.parent.parent.parent.parent.dismiss()
+
+<LoadLabel@CtrlLabel>:
+    background_color: (1,0,0,1)
+    size_hint: (1.0, None)
+    height: 50
+    text: self.ctrl.path
+
+<ScrollFilesCtrl>:
+    size_hint: (1.0, 1.0)
+
+<ActionLoadGridCtrl>:
+    size_hint: (1.0, None)
+    height: 50
+    rows: 1
+
+<FileCtrl>:
+    cols: 1
+    size_hint_y: None
+
+<FileCtrlBtn@CtrlButton>:
+    size_hint_y: None
+    size_hint: (1.0, None)
+    height: 40
+    on_press: self.ctrl.check_growth_medium_name(self.text)
+
+<CloseLoadPopupBtn@CtrlButton>:
+    text: 'cancel'
+    on_press: self.ctrl.clear_path()
+    on_press: self.parent.parent.parent.parent.parent.dismiss()
+
